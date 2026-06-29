@@ -1,0 +1,22 @@
+[package]
+name = "amqt-core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "amqt_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module"] }
+numpy = "0.22"
+num-complex = "0.4"
+rayon = "1.10"
+
+[features]
+default = ["pyo3/auto-initialize"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
