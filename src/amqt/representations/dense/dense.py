@@ -1,16 +1,4 @@
-"""
-Dense statevector representation.
 
-Stores the full 2^n complex amplitude vector.  Gate application uses the
-fastest available backend, selected at import time:
-
-  1. amqt_core  — Rust extension (in-place, zero-allocation, SIMD via LLVM)
-  2. numba      — JIT-compiled Python (in-place, zero-allocation, cached)
-  3. numpy      — pure NumPy reshape/matmul (always available, fallback)
-
-Memory: O(2^n) complex128 = O(2^n * 16) bytes.
-Gate cost: O(2^n) per single-qubit gate; O(4 * 2^n) per two-qubit gate.
-"""
 from __future__ import annotations
 
 from typing import Sequence
@@ -20,12 +8,8 @@ import numpy as np
 from amqt.representations.base import QuantumRepresentation
 from amqt.core.state.metadata import StateMetadata
 
-# Threshold below which an amplitude is considered "effectively zero"
-_ZERO_THRESHOLD = 1e-10
 
-# ---------------------------------------------------------------------------
-# Backend selection — fastest available wins
-# ---------------------------------------------------------------------------
+_ZERO_THRESHOLD = 1e-10
 
 _BACKEND = "numpy"
 _rust_core = None
@@ -33,14 +17,14 @@ _nb_1q = None
 _nb_2q = None
 
 try:
-    import amqt_core as _rust_core  # type: ignore[import]
+    import amqt_core as _rust_core 
     _BACKEND = "rust"
 except ImportError:
     pass
 
 if _BACKEND == "numpy":
     try:
-        from amqt.kernels.numba_kernels import (  # type: ignore[import]
+        from amqt.kernels.numba_kernels import (  
             apply_gate_1q as _nb_1q,
             apply_gate_2q as _nb_2q,
             NUMBA_AVAILABLE,
@@ -135,9 +119,6 @@ class DenseRepresentation(QuantumRepresentation):
         return DenseRepresentation(self._n, self._sv)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _entropy_estimate(sv: np.ndarray, n: int) -> float:
     """Normalised bipartite entropy across the n//2 | n-n//2 cut."""

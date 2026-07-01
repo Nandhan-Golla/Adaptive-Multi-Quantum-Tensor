@@ -1,21 +1,4 @@
-"""
-AMQT Benchmark Harness
-======================
 
-Compares Dense, Sparse, MPS, and Stabilizer representations on
-standard quantum circuit workloads.
-
-Usage
------
-    uv run python benchmarks/run_benchmarks.py
-
-Metrics
--------
-  wall_time_s   : wall-clock time in seconds
-  peak_memory_kb: peak memory consumption of the representation in KB
-  fidelity      : |⟨exact|approx⟩|² vs. Dense (1.0 = exact)
-  gates         : total gate count
-"""
 from __future__ import annotations
 
 import sys
@@ -25,8 +8,6 @@ from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Tuple
 
 import numpy as np
-
-# Make sure the package is importable when run from repo root
 sys.path.insert(0, "src")
 
 from amqt import QuantumTensor, H, CNOT, S, X
@@ -35,11 +16,6 @@ from amqt.error.fidelity import state_fidelity
 from amqt.representations.stabilizer.stabilizer import StabilizerRepresentation
 
 Circuit = List[Tuple]
-
-
-# ---------------------------------------------------------------------------
-# Benchmark infrastructure
-# ---------------------------------------------------------------------------
 
 @dataclass
 class BenchResult:
@@ -59,12 +35,10 @@ def _run_circuit_on_rep(
     rep_name: str,
     reference_sv: Optional[np.ndarray] = None,
 ) -> BenchResult:
-    """Run *circuit* on a QuantumTensor with *rep_name* and collect metrics."""
     tracemalloc.start()
     t0 = time.perf_counter()
 
     if rep_name == "stabilizer":
-        # Stabilizer doesn't go through QuantumTensor constructor's rep selection
         from amqt.representations.dense.dense import DenseRepresentation
         rep = StabilizerRepresentation(n)
         for gate, qubits in circuit:
@@ -103,10 +77,6 @@ def _run_circuit_on_rep(
     )
 
 
-# ---------------------------------------------------------------------------
-# Workloads
-# ---------------------------------------------------------------------------
-
 WORKLOADS: Dict[str, Callable[[int], Circuit]] = {
     "GHZ": ghz_circuit,
     "RandomClifford(d=10)": lambda n: random_clifford_circuit(n, depth=10, seed=42),
@@ -114,11 +84,6 @@ WORKLOADS: Dict[str, Callable[[int], Circuit]] = {
 }
 
 REPRESENTATIONS = ["dense", "sparse", "mps", "stabilizer"]
-
-
-# ---------------------------------------------------------------------------
-# Table printer
-# ---------------------------------------------------------------------------
 
 def _fmt(v: Optional[float], width: int = 10, decimals: int = 4) -> str:
     if v is None:
@@ -142,11 +107,6 @@ def _print_table(results: List[BenchResult], circuit_name: str, n: int) -> None:
         )
     print()
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def run(qubit_sizes: List[int] = (4, 8, 12)) -> None:
     print("=" * 70)
     print("  AMQT Benchmark Suite")
@@ -158,16 +118,14 @@ def run(qubit_sizes: List[int] = (4, 8, 12)) -> None:
         for n in qubit_sizes:
             circuit = circuit_fn(n)
 
-            # Dense is the reference (exact)
             ref_result = _run_circuit_on_rep(n, circuit, "dense", reference_sv=None)
-            # Get the reference statevector separately
             state_ref = QuantumTensor(n, initial_representation="dense", auto_switch=False)
             for gate, qubits in circuit:
                 state_ref.apply(gate, *qubits)
             ref_sv = state_ref.statevector()
 
             row_results = [ref_result]
-            row_results[0].fidelity = 1.0  # Dense is exact by definition
+            row_results[0].fidelity = 1.0 
             row_results[0].circuit = circuit_name
 
             for rep in REPRESENTATIONS[1:]:

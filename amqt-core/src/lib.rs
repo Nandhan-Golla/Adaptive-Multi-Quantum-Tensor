@@ -3,9 +3,6 @@ use pyo3::prelude::*;
 use pyo3::types::PyModule;
 use rayon::prelude::*;
 
-/// Apply an in-place 1-qubit gate to the statevector.
-///
-/// Convention: qubit 0 is the MSB.  stride = 2^(n-1-qubit).
 #[pyfunction]
 fn apply_gate_1q(
     _py: Python<'_>,
@@ -25,8 +22,7 @@ fn apply_gate_1q(
     let dim = 1usize << n;
 
     if dim >= 16384 {
-        // Parallel path for large statevectors (n >= 14).
-        // Map flat index → (i0, i1) pair where i0 has the qubit bit = 0.
+
         let log_stride = stride.trailing_zeros() as usize;
         (0..(dim / 2)).into_par_iter().for_each(|flat| {
             let low = flat & (stride - 1);
@@ -56,9 +52,6 @@ fn apply_gate_1q(
     Ok(())
 }
 
-/// Apply an in-place 2-qubit gate to the statevector.
-///
-/// gate is 4×4 row-major complex128.  Rows/cols indexed as |q0 q1⟩.
 #[pyfunction]
 fn apply_gate_2q(
     _py: Python<'_>,
@@ -98,7 +91,7 @@ fn apply_gate_2q(
     Ok(())
 }
 
-/// amqt_core — Rust-compiled gate kernels for AMQT dense statevector simulation.
+
 #[pymodule]
 fn amqt_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(apply_gate_1q, m)?)?;

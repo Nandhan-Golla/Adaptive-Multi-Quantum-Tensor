@@ -1,45 +1,17 @@
 from __future__ import annotations
 
-"""
-AMQT vs Qiskit Aer — Extended Comparison Suite
-===============================================
-
-─────────────────────────────────────────────────────────────────────────────
-CONFIGURATION  ←  tweak these values before running
-─────────────────────────────────────────────────────────────────────────────
-"""
-
-# Qubit sizes swept in the speed grid and heatmap
 QUBIT_SIZES = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-
-# Qubit sizes used in the large-n scaling plot (Fig 6)
 LARGE_N_SIZES = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-
-# Qubit count used for fidelity verification (Fig 3)
 FIDELITY_N = 5
-
-# Fixed n used for per-gate cost plot (Fig 5)
 GATE_SCALING_N = 10
-
-# Depths swept in the per-gate cost plot
 GATE_SCALING_DEPTHS = [1, 2, 4, 6, 8, 10, 12, 16, 20]
 
-# Random Clifford depth used in the speed grid
 CLIFFORD_DEPTH = 4
-
-# QAOA layers used in the speed grid
 QAOA_LAYERS = 2
-
-# Hardware ansatz repetitions used in the speed grid
 HW_ANSATZ_REPS = 2
 
-# Ising evolution Trotter steps
 ISING_STEPS = 3
-
-# Number of timing repetitions (higher = more stable median, slower run)
 TIMING_REPEATS = 3
-
-# ─────────────────────────────────────────────────────────────────────────────
 
 import sys
 import time
@@ -61,12 +33,6 @@ from amqt import (
     RZ, RX, RY, state_fidelity
 )
 from amqt.utils.circuit import _MatrixGate, _controlled_phase
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────────────────────────────────────
-
 def qiskit_to_amqt(sv: np.ndarray, n: int) -> np.ndarray:
     out = np.zeros_like(sv)
     for i in range(len(sv)):
@@ -75,7 +41,6 @@ def qiskit_to_amqt(sv: np.ndarray, n: int) -> np.ndarray:
 
 
 def time_fn(fn: Callable, repeats: int = 7) -> float:
-    """Return median wall time in ms over `repeats` calls."""
     times = []
     for _ in range(repeats):
         t0 = time.perf_counter()
@@ -85,17 +50,12 @@ def time_fn(fn: Callable, repeats: int = 7) -> float:
 
 
 def peak_memory_kb(fn: Callable) -> float:
-    """Return peak memory usage in KB for one call."""
     tracemalloc.start()
     fn()
     _, peak = tracemalloc.get_traced_memory()
     tracemalloc.stop()
     return peak / 1024
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Circuit builders  — each returns (qiskit_QC, amqt_callable, gate_count)
-# ─────────────────────────────────────────────────────────────────────────────
 
 def build_ghz(n: int):
     qc = QuantumCircuit(n)
@@ -137,7 +97,6 @@ def build_qft(n: int):
 
 
 def build_random_clifford(n: int, depth: int = 4):
-    """Random Clifford layer circuit."""
     rng = np.random.default_rng(42)
     clifford_1q = [
         ("h", lambda qc, q: qc.h(q), H),
@@ -170,7 +129,6 @@ def build_random_clifford(n: int, depth: int = 4):
 
 
 def build_bernstein_vazirani(n: int):
-    """Bernstein-Vazirani: hidden bitstring = alternating 01010..."""
     secret = [i % 2 for i in range(n - 1)]
     qc = QuantumCircuit(n)
     qc.x(n - 1)
@@ -198,7 +156,6 @@ def build_bernstein_vazirani(n: int):
 
 
 def build_qaoa(n: int, layers: int = 2):
-    """QAOA-style alternating cost + mixer layers."""
     rng = np.random.default_rng(7)
     gammas = rng.uniform(0, np.pi, layers)
     betas  = rng.uniform(0, np.pi, layers)
@@ -218,7 +175,6 @@ def build_qaoa(n: int, layers: int = 2):
             st.apply(H, q)
         for l in range(layers):
             for q in range(n - 1):
-                # RZZ(θ) = CNOT · RZ(θ) on target · CNOT
                 st.apply(CNOT, q, q + 1)
                 st.apply(RZ(2 * gammas[l]), q + 1)
                 st.apply(CNOT, q, q + 1)
@@ -229,7 +185,6 @@ def build_qaoa(n: int, layers: int = 2):
 
 
 def build_hardware_ansatz(n: int, reps: int = 2):
-    """Hardware-efficient ansatz: RY layers + CNOT entanglement."""
     rng = np.random.default_rng(13)
     thetas = rng.uniform(0, 2*np.pi, (reps + 1, n))
     qc = QuantumCircuit(n)
@@ -256,8 +211,6 @@ def build_hardware_ansatz(n: int, reps: int = 2):
 
 
 def build_w_state(n: int):
-    """W state preparation (linear decomposition)."""
-    # |W_n> = (|100...0> + |010...0> + ... + |000...1>) / sqrt(n)
     qc = QuantumCircuit(n)
     qc.x(0)
     for k in range(1, n):
@@ -279,7 +232,6 @@ def build_w_state(n: int):
 
 
 def build_ising_evolution(n: int, steps: int = 3):
-    """1D transverse-field Ising Trotterization."""
     dt = 0.1
     J = 1.0
     h = 0.5
@@ -307,7 +259,6 @@ def build_ising_evolution(n: int, steps: int = 3):
 
 
 def build_swap_test(n: int):
-    """SWAP test circuit (compare two n//2-qubit states)."""
     half = n // 2
     qc = QuantumCircuit(n + 1)
     qc.h(0)
@@ -319,7 +270,6 @@ def build_swap_test(n: int):
     def amqt():
         st = QuantumTensor(n + 1, auto_switch=False)
         st.apply(H, 0)
-        # CSWAP = Toffoli-based; approximate with CNOT+SWAP pattern
         for q in range(half):
             st.apply(CNOT, 0, q + 1)  # simplified CSWAP
             st.apply(CNOT, 0, q + 1 + half)
@@ -327,10 +277,6 @@ def build_swap_test(n: int):
         return st
     return qc, amqt, gate_count
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Gate matrix helpers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _controlled_ry(theta: float) -> np.ndarray:
     c, s = np.cos(theta / 2), np.sin(theta / 2)
@@ -341,10 +287,6 @@ def _controlled_ry(theta: float) -> np.ndarray:
         [0, 0,  s,  c],
     ], dtype=np.complex128)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 1 — 6-panel speed grid
-# ─────────────────────────────────────────────────────────────────────────────
 
 CIRCUITS = [
     ("GHZ",              build_ghz),
@@ -359,7 +301,6 @@ CIRCUITS = [
 
 
 def collect_timings(circuits, sizes, repeats=7):
-    """Returns dict: circuit_name -> {n -> (qiskit_ms, amqt_ms)}"""
     results = {}
     for name, builder in circuits:
         results[name] = {}
@@ -421,10 +362,6 @@ def plot_speed_grid(results: dict, sizes: list, out: str):
     plt.close()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 2 — Speedup ratio heatmap
-# ─────────────────────────────────────────────────────────────────────────────
-
 def plot_speedup_heatmap(results: dict, sizes: list, out: str):
     names = list(results.keys())
     data_matrix = np.zeros((len(names), len(sizes)))
@@ -457,10 +394,6 @@ def plot_speedup_heatmap(results: dict, sizes: list, out: str):
     print(f"Saved → {out}")
     plt.close()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 3 — Fidelity verification (all circuits, n=5)
-# ─────────────────────────────────────────────────────────────────────────────
 
 def plot_fidelity(circuits, n: int, out: str):
     names, fidelities = [], []
@@ -495,10 +428,6 @@ def plot_fidelity(circuits, n: int, out: str):
     plt.close()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 4 — Peak memory comparison
-# ─────────────────────────────────────────────────────────────────────────────
-
 def plot_memory(circuits_subset, sizes, out: str):
     fig, axes = plt.subplots(1, len(circuits_subset), figsize=(16, 5))
     fig.suptitle("Peak Memory Usage — AMQT vs Qiskit Aer", fontweight="bold")
@@ -530,12 +459,8 @@ def plot_memory(circuits_subset, sizes, out: str):
     plt.close()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 5 — Time per gate vs circuit depth
-# ─────────────────────────────────────────────────────────────────────────────
 
 def plot_gate_scaling(out: str):
-    """Fix n=GATE_SCALING_N, vary depth to see per-gate overhead."""
     n = GATE_SCALING_N
     depths = GATE_SCALING_DEPTHS
 
@@ -576,10 +501,6 @@ def plot_gate_scaling(out: str):
     plt.close()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 6 — Scaling to larger n (n=2..14) on GHZ and QFT
-# ─────────────────────────────────────────────────────────────────────────────
-
 def plot_large_n(out: str):
     sizes_large = LARGE_N_SIZES
     builders = [("GHZ", build_ghz), ("QFT", build_qft)]
@@ -615,11 +536,6 @@ def plot_large_n(out: str):
     print(f"Saved → {out}")
     plt.close()
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Figure 7 — Probability bar chart for new circuit types
-# ─────────────────────────────────────────────────────────────────────────────
-
 def plot_new_probabilities(out: str):
     cases = [
         ("Bernstein-Vazirani\n(n=5, secret=01010)", 5, build_bernstein_vazirani),
@@ -643,7 +559,6 @@ def plot_new_probabilities(out: str):
             a_probs = (asv.conj() * asv).real
             dim = len(q_probs)
 
-            # Keep top-16 states by Qiskit probability
             if dim > 16:
                 top_idx = np.argsort(q_probs)[::-1][:16]
                 top_idx = np.sort(top_idx)
@@ -671,11 +586,6 @@ def plot_new_probabilities(out: str):
     plt.savefig(out, dpi=150, bbox_inches="tight")
     print(f"Saved → {out}")
     plt.close()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     OUT = Path("experiments")

@@ -9,9 +9,6 @@ description = "Adaptive Multi-Representation Quantum Tensor — a novel foundati
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
-authors = [
-  {name = "QauliumAI", email = "janakiram.venkat2008@gmail.com"},
-]
 keywords = ["quantum", "simulation", "tensor", "mps", "sparse"]
 classifiers = [
   "Development Status :: 2 - Pre-Alpha",

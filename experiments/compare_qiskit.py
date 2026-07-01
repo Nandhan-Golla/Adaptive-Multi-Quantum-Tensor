@@ -1,33 +1,12 @@
 from __future__ import annotations
 
-"""
-AMQT vs Qiskit — circuit comparison + speed benchmarks
-=======================================================
 
-Produces two output files:
-
-  experiments/prob_comparison.png  — probability bar charts, one figure per circuit
-  experiments/speed_comparison.png — execution time vs qubit count (line graphs)
-
-Usage
------
-    uv run python experiments/compare_qiskit.py
-
-─────────────────────────────────────────────────────────────────────────────
-CONFIGURATION  ←  tweak these values before running
-─────────────────────────────────────────────────────────────────────────────
-"""
-
-# Qubit sizes to sweep in the speed line graphs (x-axis of each panel)
 SPEED_QUBIT_SIZES = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
 
-# Fixed qubit counts used for the probability bar-chart panels
 PROB_BELL_N   = 2    # Bell state  (must stay 2)
 PROB_GHZ_N    = 5    # GHZ state
 PROB_QFT_N    = 4    # QFT
 PROB_MIXED_N  = 6    # Mixed Clifford + rotation circuit
-
-# Number of timing repetitions (higher = more stable median, slower run)
 TIMING_REPEATS = 3
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -49,22 +28,12 @@ from amqt import QuantumTensor, H, X, CNOT, CZ, SWAP, RZ, RX, state_fidelity
 from amqt.utils.circuit import _MatrixGate, _controlled_phase
 
 
-# ---------------------------------------------------------------------------
-# Helpers: qubit-ordering conversion
-# ---------------------------------------------------------------------------
-
 def qiskit_to_amqt_sv(sv: np.ndarray, n: int) -> np.ndarray:
-    """Convert Qiskit little-endian statevector to AMQT MSB convention."""
     out = np.zeros_like(sv)
     for i in range(len(sv)):
         rev = int(f"{i:0{n}b}"[::-1], 2)
         out[rev] = sv[i]
     return out
-
-
-# ---------------------------------------------------------------------------
-# Circuit builders  (returns qiskit QC + AMQT callable, both for n qubits)
-# ---------------------------------------------------------------------------
 
 def bell(n: int = 2):
     assert n == 2
@@ -144,12 +113,8 @@ def mixed(n: int):
     return qc, amqt
 
 
-# ---------------------------------------------------------------------------
-# Timing helper
-# ---------------------------------------------------------------------------
 
 def time_both(qc: QuantumCircuit, amqt_fn: Callable, n: int, repeats: int = 5):
-    """Return (qiskit_ms, amqt_ms) — median over `repeats` runs."""
     q_times, a_times = [], []
     for _ in range(repeats):
         t0 = time.perf_counter()
@@ -162,10 +127,6 @@ def time_both(qc: QuantumCircuit, amqt_fn: Callable, n: int, repeats: int = 5):
 
     return float(np.median(q_times)), float(np.median(a_times))
 
-
-# ---------------------------------------------------------------------------
-# Figure 1 — probability comparison (4 subplots, 2×2 grid)
-# ---------------------------------------------------------------------------
 
 def plot_probabilities():
     fixed_circuits = [
@@ -188,8 +149,6 @@ def plot_probabilities():
         q_probs = (qsv.conj() * qsv).real
         a_probs = (asv.conj() * asv).real
         dim = len(q_probs)
-
-        # Trim to at most 32 bars for readability
         MAX = 32
         if dim <= MAX:
             idx = np.arange(dim)
@@ -227,12 +186,8 @@ def plot_probabilities():
     plt.close()
 
 
-# ---------------------------------------------------------------------------
-# Figure 2 — execution time vs qubit count (line graphs)
-# ---------------------------------------------------------------------------
 
 def plot_speed():
-    # (label, builder_fn, qubit sizes to sweep)
     benchmarks = [
         ("GHZ Circuit",    ghz,   SPEED_QUBIT_SIZES),
         ("QFT Circuit",    qft,   SPEED_QUBIT_SIZES),
@@ -263,7 +218,6 @@ def plot_speed():
         ax.plot(sizes, q_ms_list, "o-", label="Qiskit Aer", color="steelblue",    linewidth=2, markersize=6)
         ax.plot(sizes, a_ms_list, "s-", label="AMQT",        color="darkorange",   linewidth=2, markersize=6)
 
-        # Annotate the n=10 point
         if 10 in sizes:
             i10 = sizes.index(10)
             ax.annotate(
@@ -294,10 +248,6 @@ def plot_speed():
     print(f"\nSaved → {out}")
     plt.close()
 
-
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     print("=" * 55)

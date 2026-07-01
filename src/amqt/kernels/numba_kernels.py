@@ -1,20 +1,4 @@
-"""
-Numba-JIT compiled gate kernels for dense statevector simulation.
 
-These replace the NumPy reshape/transpose/matmul path in DenseRepresentation
-with allocation-free in-place operations that run at compiled C speed.
-
-Algorithm (1-qubit gate on qubit q of n-qubit system):
-    stride = 2^(n-1-q)   — qubit 0 is MSB
-    For every pair (i0, i1) where i0 has bit q = 0 and i1 = i0 | stride:
-        [sv[i0], sv[i1]] = gate @ [sv[i0], sv[i1]]
-
-No array allocation.  No reshape.  No temporary objects.
-
-First call to each function triggers JIT compilation (~1-2 s).
-Subsequent calls (and all calls after process restart with cache=True)
-run at near-native speed.
-"""
 from __future__ import annotations
 
 import numpy as np
@@ -24,7 +8,6 @@ try:
 
     @numba.njit(cache=True)
     def apply_gate_1q(sv, gate, qubit, n):
-        """In-place 1-qubit gate. sv is modified in place."""
         stride = 1 << (n - 1 - qubit)
         dim = 1 << n
         g00 = gate[0, 0]
@@ -42,7 +25,6 @@ try:
 
     @numba.njit(cache=True)
     def apply_gate_2q(sv, gate, q0, q1, n):
-        """In-place 2-qubit gate. q0 = target_qubits[0], q1 = target_qubits[1]."""
         s0 = 1 << (n - 1 - q0)
         s1 = 1 << (n - 1 - q1)
         dim = 1 << n
