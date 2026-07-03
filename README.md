@@ -4,7 +4,7 @@
 
 ### 🎓 Research Acknowledgement
 This project is part of an active research collaboration between:
-* **TRIAC (Tensor Research and Interdisciplinary Applications Center), VIT-AP University**
+* **TRIAC, VIT-AP University**
 * **RBG Labs, Indian Institute of Technology Madras (IITM)**
 
 ---
