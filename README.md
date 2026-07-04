@@ -10,7 +10,16 @@ This project is part of an active research collaboration between:
 ---
 
 <p align="center">
-  <img src="assests/WhatsApp%20Image%202026-07-03%20at%2022.25.51.jpeg" alt="AMQT Logo" width="600"/>
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <img src="assests/WhatsApp%20Image%202026-07-03%20at%2022.25.51.jpeg" alt="AMQT Logo" width="100%"/>
+      </td>
+      <td align="center" width="50%">
+        <img src="assests/Pasted%20image.png" alt="RBG Labs Logo" width="100%"/>
+      </td>
+    </tr>
+  </table>
 </p>
 
 AMQT (Adaptive Multi-Representation Quantum Tensor) is a research-first, novel foundational data structure and simulation framework for quantum computation. Inspired by how the multi-dimensional tensor became the bedrock of modern machine learning frameworks (like PyTorch and JAX), AMQT aims to reinvent the underlying data structures of quantum computing. 
