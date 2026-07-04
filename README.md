@@ -13,7 +13,7 @@ This project is part of an active research collaboration between:
   <table>
     <tr>
       <td align="center" width="50%">
-        <img src="assests/WhatsApp%20Image%202026-07-03%20at%2022.25.51.jpeg" alt="AMQT Logo" width="100%"/>
+        <img src="assests/WhatsApp%20Image%202026-07-03%20at%2022.25.51.jpeg" alt="TRIAC Logo" width="100%"/>
       </td>
       <td align="center" width="50%">
         <img src="assests/Pasted%20image.png" alt="RBG Labs Logo" width="100%"/>
