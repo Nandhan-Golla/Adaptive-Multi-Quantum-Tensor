@@ -36,7 +36,6 @@ The repository is structured to maintain a clean separation between core mathema
 Adaptive-Multi-Quantum-Tensor/
 ├── pyproject.toml              # Root Python project config (dependencies, pytest options)
 ├── uv.lock                     # Locked dependencies managed via uv
-├── CLAUDE.md                   # Development guide and shortcuts
 ├── README.md                   # Project documentation (this file)
 │
 ├── amqt-core/                  # Rust library for high-performance CPU kernels
